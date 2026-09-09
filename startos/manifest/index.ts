@@ -5,7 +5,7 @@ export const manifest = setupManifest({
   id: 'snowflake', // Changed from 'hello-world'
   title: 'Snowflake', // Changed from 'Hello World'
   license: 'BSD-3-Clause',
-  packageRepo: 'https://github.com/tfriberg/snowflake-startos-sideloader',
+  packageRepo: 'https://github.com/alru78/snowflake-startos-sideloader',
   upstreamRepo:
     'https://gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake',
   marketingUrl: 'https://start9.com/',

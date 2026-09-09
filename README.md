@@ -13,6 +13,15 @@ Proof is in the pudding:
 
 <img width="1224" height="720" alt="image" src="https://github.com/user-attachments/assets/a6a353c6-545c-4b7b-9445-553d4863e250" />
 
+## StartOS Packaging Notes
+
+This package wraps the upstream Snowflake standalone proxy (`proxy/`) in a StartOS service. Two pieces are specific to this package, not part of upstream Snowflake:
+
+- **`Dockerfile`** — a multi-stage build: compiles `snowflake-proxy` from `source/proxy` in a `golang:1.24-alpine` builder stage, then copies the binary into a minimal `alpine:3.19` runtime image alongside `busybox-extras` (needed for its `httpd` applet, which the default `busybox` package doesn't include).
+- **`scripts/dashboard.sh`** — the container's entrypoint (invoked from `startos/main.ts`). It runs `snowflake-proxy`, tees its log output to `/data/snowflake.log` on the package's persistent volume (so history survives restarts and updates), regenerates a static stats page from that log every 5 minutes, and serves it on port 80 via `busybox-extras httpd`. This is what "Open UI" shows in the StartOS dashboard — NAT type, bandwidth totals, and a bar chart/table of recent hourly activity — all parsed directly from the proxy's own log lines with no external dependencies, network calls, or JS charting libraries involved.
+
+See `instructions.md` for the end-user-facing description of the dashboard.
+
 ---
 
 Snowflake is a censorship-evasion pluggable transport using WebRTC, inspired by Flashproxy.

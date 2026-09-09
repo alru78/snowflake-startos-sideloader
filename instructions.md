@@ -41,3 +41,14 @@ manual port forwarding!
 **Q: Why is this called Snowflake?**
 It utilizes the "ICE" negotiation via WebRTC, and also involves a great
 abundance of ephemeral and short-lived (and special!) volunteer proxies...
+
+## Open UI: Stats Dashboard
+
+Clicking **Open UI** in the StartOS dashboard for this service shows a live stats page with:
+
+- **NAT type** — whether your proxy is reachable directly ("unrestricted") or only through relayed connections ("restricted"), as determined by the proxy itself shortly after each start.
+- **Bandwidth** totals for today, the last 7 days, the last 30 days, and all-time.
+- **Connections** in the most recent completed hour.
+- A **bar chart** and table of recent hourly activity.
+
+The page refreshes itself automatically every 5 minutes. Everything shown is computed from the proxy's own log output and stored on this service's persistent volume, so history survives restarts and updates — but it starts from zero the first time this dashboard feature is installed, since it has no earlier log data to draw from.
