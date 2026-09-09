@@ -18,8 +18,26 @@ esc() {
 }
 
 fmt_gb() {
-  # $1 = kilobytes -> "X.XX GB"
-  awk -v kb="$1" 'BEGIN { printf "%.2f GB", kb/1048576 }'
+  # $1 = kilobytes -> "X.X MB" below 1 GB, "X.XX GB" at/above 1 GB.
+  # (Name kept as fmt_gb since every call site already uses it; only the
+  # unit shown adapts to the size.)
+  awk -v kb="$1" 'BEGIN {
+    if (kb >= 1048576) printf "%.2f GB", kb/1048576
+    else printf "%.1f MB", kb/1024
+  }'
+}
+
+trend_html() {
+  # $1 = current-window kb, $2 = equivalent-length prior-window kb.
+  # Emits a small up/down indicator, or nothing if there's no prior-window
+  # data yet to compare against (e.g. the package was only installed today).
+  awk -v cur="$1" -v prev="$2" 'BEGIN {
+    if (prev <= 0) { printf ""; exit }
+    pct = ((cur - prev) / prev) * 100
+    if (pct < 0) { cls = "trend-down"; arrow = "&#9660;"; pct = -pct }
+    else { cls = "trend-up"; arrow = "&#9650;" }
+    printf " <span class=\"trend %s\">%s %d%%</span>", cls, arrow, (pct + 0.5)
+  }'
 }
 
 now_epoch() { date -u +%s; }
@@ -36,6 +54,18 @@ generate() {
   week_start=$(( now - 7*86400 ))
   month_start=$(( now - 30*86400 ))
 
+  # Comparison windows for the up/down trend indicators: each is the same
+  # length as its current window, immediately preceding it. "Yesterday" is
+  # capped at the same elapsed time-of-day as today so a partial today isn't
+  # unfairly compared against a full day.
+  today_elapsed=$(( now - today_start ))
+  yesterday_start=$(( today_start - 86400 ))
+  yesterday_end=$(( yesterday_start + today_elapsed ))
+  prev_week_start=$(( week_start - 7*86400 ))
+  prev_week_end=$week_start
+  prev_month_start=$(( month_start - 30*86400 ))
+  prev_month_end=$month_start
+
   nat_type="unknown"
   nat_ts=""
   proxy_start_ts=""
@@ -44,10 +74,14 @@ generate() {
   week_conn=0;  week_down=0;  week_up=0
   month_conn=0; month_down=0; month_up=0
   total_conn=0; total_down=0; total_up=0
+  prev_today_down=0; prev_today_up=0
+  prev_week_down=0;  prev_week_up=0
+  prev_month_down=0; prev_month_up=0
   sample_count=0
   latest_hour_conn="-"
   recent_rows=""
   bar_data=""
+  max_kb=0
 
   if [ -f "$LOG_FILE" ]; then
     nat_line="$(grep -a 'NAT type:' "$LOG_FILE" 2>/dev/null | tail -n 1 || true)"
@@ -103,6 +137,16 @@ EOF_PARSED
         fi
         if [ "$ep" -ge "$today_start" ]; then
           today_conn=$((today_conn + conn)); today_down=$((today_down + down)); today_up=$((today_up + up))
+        fi
+
+        if [ "$ep" -ge "$prev_month_start" ] && [ "$ep" -lt "$prev_month_end" ]; then
+          prev_month_down=$((prev_month_down + down)); prev_month_up=$((prev_month_up + up))
+        fi
+        if [ "$ep" -ge "$prev_week_start" ] && [ "$ep" -lt "$prev_week_end" ]; then
+          prev_week_down=$((prev_week_down + down)); prev_week_up=$((prev_week_up + up))
+        fi
+        if [ "$ep" -ge "$yesterday_start" ] && [ "$ep" -lt "$yesterday_end" ]; then
+          prev_today_down=$((prev_today_down + down)); prev_today_up=$((prev_today_up + up))
         fi
 
         latest_hour_conn="$conn"
@@ -165,10 +209,11 @@ h1{font-size:20px;margin:0 0 4px;display:flex;align-items:center;gap:8px}.meta{c
 .label{font-size:12px;color:var(--muted);margin-bottom:6px}.value{font-size:22px;font-weight:600}
 .sub{font-size:11px;color:var(--muted);margin-top:4px}
 .nat-good{color:var(--good)}.nat-warn{color:var(--warn)}
+.trend{font-size:12px;font-weight:600}.trend-up{color:var(--good)}.trend-down{color:var(--warn)}
 table{width:100%;border-collapse:collapse;font-size:12px}
 th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--border)}
 th{color:var(--muted);font-weight:600}
-h2{font-size:14px;margin:24px 0 8px}
+h2{font-size:14px;margin:24px 0 8px}.peak{color:var(--muted);font-weight:400;font-size:12px}
 .bar-chart{display:flex;align-items:flex-end;gap:3px;height:100px;padding:8px;background:var(--card);border:1px solid var(--border);border-radius:10px}
 .bar{flex:1 1 auto;min-width:4px;background:var(--good);border-radius:2px 2px 0 0;transition:background .15s}
 .bar:hover{background:#2ea043}
@@ -182,12 +227,12 @@ CSS
     printf '<div class="tile"><div class="label">NAT Type</div><div class="value %s">%s</div>%s</div>' \
       "$nat_class" "$(esc "$nat_type")" \
       "$( [ -n "$nat_ts" ] && printf '<div class="sub">as of %s UTC</div>' "$(esc "$nat_ts")" || true )"
-    printf '<div class="tile"><div class="label">Bandwidth (today)</div><div class="value">%s</div><div class="sub">%s connections</div></div>' \
-      "$(fmt_gb $((today_down + today_up)))" "$today_conn"
-    printf '<div class="tile"><div class="label">Bandwidth (7 days)</div><div class="value">%s</div><div class="sub">%s connections</div></div>' \
-      "$(fmt_gb $((week_down + week_up)))" "$week_conn"
-    printf '<div class="tile"><div class="label">Bandwidth (30 days)</div><div class="value">%s</div><div class="sub">%s connections</div></div>' \
-      "$(fmt_gb $((month_down + month_up)))" "$month_conn"
+    printf '<div class="tile"><div class="label">Bandwidth (today)</div><div class="value">%s%s</div><div class="sub">%s connections</div></div>' \
+      "$(fmt_gb $((today_down + today_up)))" "$(trend_html $((today_down + today_up)) $((prev_today_down + prev_today_up)))" "$today_conn"
+    printf '<div class="tile"><div class="label">Bandwidth (7 days)</div><div class="value">%s%s</div><div class="sub">%s connections</div></div>' \
+      "$(fmt_gb $((week_down + week_up)))" "$(trend_html $((week_down + week_up)) $((prev_week_down + prev_week_up)))" "$week_conn"
+    printf '<div class="tile"><div class="label">Bandwidth (30 days)</div><div class="value">%s%s</div><div class="sub">%s connections</div></div>' \
+      "$(fmt_gb $((month_down + month_up)))" "$(trend_html $((month_down + month_up)) $((prev_month_down + prev_month_up)))" "$month_conn"
     printf '<div class="tile"><div class="label">Bandwidth (all-time)</div><div class="value">%s</div><div class="sub">%s connections</div></div>' \
       "$(fmt_gb $((total_down + total_up)))" "$total_conn"
     printf '<div class="tile"><div class="label">Connections (latest hour)</div><div class="value">%s</div></div>' "$latest_hour_conn"
@@ -197,10 +242,11 @@ CSS
     fi
     printf '</div>'
 
-    printf '<h2>Bandwidth, last %s hours</h2>' "$sample_count"
     if [ -n "$bar_html" ]; then
+      printf '<h2>Bandwidth, last %s hours <span class="peak">(peak: %s)</span></h2>' "$sample_count" "$(fmt_gb "$max_kb")"
       printf '<div class="bar-chart">%s</div>' "$bar_html"
     else
+      printf '<h2>Bandwidth, last %s hours</h2>' "$sample_count"
       printf '<p class="sub">No hourly summaries logged yet.</p>'
     fi
 
