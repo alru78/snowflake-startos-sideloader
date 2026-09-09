@@ -12,6 +12,18 @@ Tested and confirmed working by the way of sideloading on StartOS running on a m
 
 <img width="1224" alt="Snowflake dashboard showing NAT type, bandwidth totals, peak-labeled bar chart, and recent hourly activity" src="docs/dashboard.png" />
 
+## Stats Dashboard
+
+Clicking **Open UI** in the StartOS dashboard for this service shows a live stats page:
+
+- **NAT type** — restricted or unrestricted, detected shortly after each proxy start
+- **Bandwidth** for today, the last 7 days, the last 30 days, and all-time (shown in MB or GB depending on size), each with an up/down trend arrow comparing against the equivalent prior period once there's enough history
+- **Connections** in the most recent completed hour
+- A **bar chart**, labeled with its peak value, and a **table** of recent hourly activity
+- Auto-refreshes every 5 minutes — no manual reload needed
+
+Everything shown is computed from the proxy's own log output with no external dependencies, network calls, or JS charting libraries. History is stored on this service's persistent volume, so it survives restarts and updates, but starts from zero the first time this feature is installed, since there's no earlier log data to draw from.
+
 ## StartOS Packaging Notes
 
 This package wraps the upstream Snowflake standalone proxy (`proxy/`) in a StartOS service. Two pieces are specific to this package, not part of upstream Snowflake:
