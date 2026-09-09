@@ -10,7 +10,7 @@ Built on MacOS Golden Gate with instructions from Claude including a nice Dashbo
 Tested and confirmed working by the way of sideloading on StartOS running on a mac mini DIY
 
 
-<img width="1224" height="720" alt="image" src="https://github.com/user-attachments/assets/a6a353c6-545c-4b7b-9445-553d4863e250" />
+<img width="1224" alt="Snowflake dashboard showing NAT type, bandwidth totals, peak-labeled bar chart, and recent hourly activity" src="docs/dashboard.png" />
 
 ## StartOS Packaging Notes
 
