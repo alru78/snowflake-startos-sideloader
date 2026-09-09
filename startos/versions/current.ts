@@ -1,13 +1,13 @@
 import { IMPOSSIBLE, VersionInfo } from '@start9labs/start-sdk'
 
 export const current = VersionInfo.of({
-  version: '2.0.0:7',
+  version: '2.0.0:12',
   releaseNotes: {
-    en_US: 'Bumps start-sdk → 1.5.3.',
-    es_ES: 'Actualiza start-sdk → 1.5.3.',
-    de_DE: 'Aktualisiert start-sdk → 1.5.3.',
-    pl_PL: 'Aktualizuje start-sdk → 1.5.3.',
-    fr_FR: 'Met à jour start-sdk → 1.5.3.',
+    en_US: 'Adds dashboard branding and fixes "Proxy last started" showing the first restart ever instead of the most recent one.',
+    es_ES: 'Añade marca al panel y corrige que "Proxy iniciado por última vez" mostrara el primer reinicio en lugar del más reciente.',
+    de_DE: 'Fügt Dashboard-Branding hinzu und behebt, dass "Proxy zuletzt gestartet" den allerersten Neustart statt des letzten anzeigte.',
+    pl_PL: 'Dodaje branding panelu i naprawia błąd pokazujący pierwsze uruchomienie zamiast najnowszego w polu "Ostatnie uruchomienie proxy".',
+    fr_FR: 'Ajoute la marque du tableau de bord et corrige "Dernier démarrage du proxy" qui affichait le tout premier démarrage au lieu du plus récent.',
   },
   migrations: {
     up: async ({ effects }) => {},

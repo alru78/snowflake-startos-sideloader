@@ -16,7 +16,11 @@ export const main = sdk.setupMain(async ({ effects }) => {
       }),
       'snowflake-sub',
     ),
-    exec: { command: ['snowflake-proxy', '-log', '/dev/stdout'] },
+    // dashboard.sh runs the real snowflake-proxy binary itself (logging to
+    // both stdout and a file on the data volume), plus a small busybox httpd
+    // on port 80 serving a stats page built from that log -- this is what
+    // "Open UI" now points to. See scripts/dashboard.sh.
+    exec: { command: ['/usr/local/bin/dashboard.sh'] },
 
     // READY BLOCK
     ready: {
