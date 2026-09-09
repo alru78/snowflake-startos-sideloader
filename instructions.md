@@ -47,8 +47,8 @@ abundance of ephemeral and short-lived (and special!) volunteer proxies...
 Clicking **Open UI** in the StartOS dashboard for this service shows a live stats page with:
 
 - **NAT type** — whether your proxy is reachable directly ("unrestricted") or only through relayed connections ("restricted"), as determined by the proxy itself shortly after each start.
-- **Bandwidth** totals for today, the last 7 days, the last 30 days, and all-time.
+- **Bandwidth** totals for today, the last 7 days, the last 30 days, and all-time (shown in MB or GB depending on size), each with an up/down trend arrow comparing against the equivalent prior period once there's enough history.
 - **Connections** in the most recent completed hour.
-- A **bar chart** and table of recent hourly activity.
+- A **bar chart**, labeled with its peak value, and a **table** of recent hourly activity — both show a rolling window of the most recent 24 hours, oldest dropped as each new hour completes.
 
 The page refreshes itself automatically every 5 minutes. Everything shown is computed from the proxy's own log output and stored on this service's persistent volume, so history survives restarts and updates — but it starts from zero the first time this dashboard feature is installed, since it has no earlier log data to draw from.

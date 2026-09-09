@@ -242,11 +242,19 @@ CSS
     fi
     printf '</div>'
 
+    # The chart/table below only ever show the most recent 24 hourly
+    # summaries (see keep_from above), even though sample_count keeps a
+    # lifetime total -- cap what the heading claims to match what's shown.
+    shown_hours=$sample_count
+    if [ "$shown_hours" -gt 24 ]; then
+      shown_hours=24
+    fi
+
     if [ -n "$bar_html" ]; then
-      printf '<h2>Bandwidth, last %s hours <span class="peak">(peak: %s)</span></h2>' "$sample_count" "$(fmt_gb "$max_kb")"
+      printf '<h2>Bandwidth, last %s hours <span class="peak">(peak: %s)</span></h2>' "$shown_hours" "$(fmt_gb "$max_kb")"
       printf '<div class="bar-chart">%s</div>' "$bar_html"
     else
-      printf '<h2>Bandwidth, last %s hours</h2>' "$sample_count"
+      printf '<h2>Bandwidth, last %s hours</h2>' "$shown_hours"
       printf '<p class="sub">No hourly summaries logged yet.</p>'
     fi
 
