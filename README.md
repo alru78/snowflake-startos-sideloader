@@ -6,10 +6,9 @@
 
 Initial build of the Snowflake sideloader for StartOS.
 
-Built on MacOS Sequoia (imagine me being able to spell that) with instructions from Leo AI (Brave browser). 
-Tested and confirmed working by the way of sideloading on StartOS running in a Proxmox VM.
+Built on MacOS Golden Gate with instructions from Claude including a nice Dashboard view 
+Tested and confirmed working by the way of sideloading on StartOS running on a mac mini DIY
 
-Proof is in the pudding:
 
 <img width="1224" height="720" alt="image" src="https://github.com/user-attachments/assets/a6a353c6-545c-4b7b-9445-553d4863e250" />
 
